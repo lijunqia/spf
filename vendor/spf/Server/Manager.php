@@ -2,11 +2,12 @@
 namespace spf\Server;
 use spf\Server;
 use spf\Log;
-class Manager
+class Manager extends \spf\Base
 {
 	protected $config=[];
 	function __construct($config)
 	{
+		parent::__construct();
 		$this->config = $config;
 	}
 	function run($cmd,$name)
@@ -18,6 +19,7 @@ class Manager
 		$config = $this->config;
 		$class = '\spf\Network\Server\\'.$config['server']['type'];
 		$server = new $class($config);
+		$server->name = $name;
 		return $server->start();
 	}
 	protected function stop()

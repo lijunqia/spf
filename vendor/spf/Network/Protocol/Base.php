@@ -16,10 +16,6 @@ class Base implements Protocol
 	{
 
 	}
-	function setServer($server)
-	{
-		$this->server = $server;
-	}
 	function onStart($server, $workerId)
 	{
 	}

@@ -13,17 +13,7 @@ class Http extends Base
 	}
 	function onRequest(\swoole_http_request $request, \swoole_http_response $response)
 	{
-		$request->scheduler = $this->swoole->scheduler;
-		//$this->protocol->onRequest($request, $response);
-		ob_start();
-		echo "<h1>Hello World. #".rand(1000, 9999)."</h1><pre>";
-		print_r($this);
-		//$response->header("Content-Type", "text/html; charset=utf-8");
-		echo '</pre>';
-		$content = ob_get_clean();
-		//print_r($request);
-		echo $request->server['request_time'],"\n";
-		$response->end($content);
+		$this->protocol->onRequest($request,$response);
 	}
 
 	/**
@@ -32,7 +22,7 @@ class Http extends Base
 	 */
 	public function onWorkerStart($server, $workerId)
 	{
-		parent::onWorkerStart($server, $workerId);
 		$this->protocol = new \spf\Network\Protocol\Http();
+		parent::onWorkerStart($server, $workerId);
 	}
 }

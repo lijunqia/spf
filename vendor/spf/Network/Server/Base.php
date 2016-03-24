@@ -5,6 +5,7 @@ use spf\Log;
 class Base
 {
 	protected $swoole;
+	public $name;
 	protected $setting = [];
 	protected $server = [];
 	protected $protocol;
@@ -63,17 +64,14 @@ class Base
 
 	public function onWorkerStart($server, $workerId)
 	{
+		//$this->setProtocol($protocol);//please set at children class
 		$name = ($workerId >= $this->setting['worker_num'])?'task':'event';
 		$workProcessName = sprintf($this->server['worker_process_name'],$name,$workerId);
 		echo "onWorkerStart:{$workProcessName}\n";
 		Control::setName($workProcessName);
 		if ($this->server['user']) Control::changeUser($this->server['user']);
-		//TODO:: init protocol
-
-		//$protocol = (require_once $this->requireFile);//执行
-		//throw new \Exception("[error] the protocol class  is empty or undefined");
-		//$this->setProtocol($protocol);
-		//$this->protocol->onStart($server, $workerId);
+		$this->protocol->onStart($server, $workerId);
+		$this->protocol->name = $this->name;
 	}
 
 	public function onWorkerStop($server, $workerId)

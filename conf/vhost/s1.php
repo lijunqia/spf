@@ -3,7 +3,7 @@ return [
 	'server'=>[
 		'type'=>'Http',//server type: Socket/Http/WebSocket
 		'listen'=>[8081,['0.0.0.0',8082]],//port
-		//'index'=>'/opt/htdocs/spf/bin/test/socket.php',
+		'request_callback'=>['\syb\mvc\App','run'],
 		'monitor_unisock_path' => SPF_APP_PATH.'/var/run/swoole-s1-monitor.sock',
 		'monitor_process_name'=>'swoole-s1-monitor',
 		'master_process_name'=>'swoole-s1-master',
