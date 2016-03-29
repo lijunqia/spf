@@ -1,9 +1,14 @@
 <?php
 namespace spf;
-class Log{
-use Logger;
-	static function load_config()
-	{
-		return Server::getInstance()->loadSpfConfig()['logger'];
-	}
+
+use spf\Server\Server;
+
+class Log
+{
+    use Logger;
+
+    static function load_config()
+    {
+        return Server::getConfig('spf')['logger'];
+    }
 }

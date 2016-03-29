@@ -1,6 +1,6 @@
 <?php
 namespace spf\Server;
-use spf\Server;
+use spf\Server\Server;
 use \swoole_process;
 class Monitor
 {
@@ -13,7 +13,7 @@ class Monitor
 	function __construct($name)
 	{
 		$this->name = $name;
-		$config = Server::getServerConfig($name,'server');
+		$config = Server::getServerConfig($name);
 		$this->monitorProcessName=$config['monitor_process_name'];
 		$this->unisockPath=$config['monitor_unisock_path'];
 		$this->processExist = \spf\Process\Control::exists($this->monitorProcessName);
@@ -26,7 +26,7 @@ class Monitor
 	{
 		$this->cmd = $cmd;
 		$name = $this->name;
-		$redirect_stdin_stdout =($cmd==='start' || inDev===TRUE)?FALSE:TRUE;
+		$redirect_stdin_stdout =($cmd==='start' || \inDev===TRUE)?FALSE:TRUE;
 		$process = new swoole_process(function(swoole_process $worker)use($cmd,$name){
 			$worker->exec(phpBin, array(execBin, Server::ServerReq ,$cmd, $name));
 		},$redirect_stdin_stdout);

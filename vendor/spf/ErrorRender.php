@@ -1,8 +1,8 @@
 <?php
 namespace spf;
-class ErrorHandler
+class ErrorRender
 {
-	static function get_error_type(\ErrorException $e)
+	static function getErrorType(\ErrorException $e)
 	{
 		$exit = FALSE;
 		$severity = $e->getSeverity();
@@ -43,50 +43,64 @@ class ErrorHandler
 		}
 		return array($type,$exit);
 	}
+	static function handleSwoole($e)
+	{
+
+	}
+
+	/**
+	 * PHP_SAPI === 'cli' || self::isAjax()
+	 * @param $e
+	 */
+	static function parsePlain($e)
+	{
+		return self::exceptionText($e);
+	}
+
+	/**
+	 * html
+	 * @param $e
+	 */
+	static function parseRich($e)
+	{
+		ob_start();
+		if (!headers_sent()) {
+			header('Content-Type: text/html; charset=utf-8', TRUE, 500);//header('HTTP/1.1 500 Internal Server Error');
+		}
+		$severity_name = 'Exception';
+		if($e instanceof \ErrorException)
+		{
+			list($severity_name,$exit) = self::getErrorType($e);
+		}elseif($e instanceof \Error) {
+			$severity_name = 'Error';
+		}
+		$code = $e->getCode();
+		if($code)$severity_name.=":{$code}";
+		$code = $severity_name;
+		$message = $e->getMessage();
+		$trace = $e->getTrace();
+		$flag = include "dist/error.tpl.php";//Include the exception HTML
+		$out = ob_get_clean();
+		if($flag){
+			return $out;
+		}else{
+			return self::parsePlain($e);
+		}
+	}
 
 	/**
 	 * 异常处理
 	 */
-	static function handle($e)
+	static function render($e,$forcePlain=FALSE)
 	{
 		try {
-			\Log::error($e->__toString());
-			if (PHP_SAPI === 'cli') {
-				$error = self::exception_text($e);
-				echo $error, "\n";
-				exit(1);
+			if($forcePlain){
+				return self::parsePlain($e);
+			}else{
+				return self::parseRich($e);
 			}
-			$severity_name = 'Exception';
-			if($e instanceof \ErrorException)
-			{
-				list($severity_name,$exit) = self::get_error_type($e);
-			}elseif($e instanceof \Error) {
-				$severity_name = 'Error';
-			}
-			$code = $e->getCode();
-			if($code)$severity_name.=":{$code}";
-			$code = $severity_name;
-
-			$message = $e->getMessage();
-			$trace = $e->getTrace();
-			if (!headers_sent()) {
-				header('Content-Type: text/html; charset=utf-8', TRUE, 500);//header('HTTP/1.1 500 Internal Server Error');
-			}
-			if (self::is_ajax()) {
-				if (IN_DEV) {
-					echo self::exception_text($e);
-					exit(1);
-				} else {
-					exit("\n{$message}\n");
-				}
-			}
-			$flag = include "dist/error.tpl.php";//Include the exception HTML
-			if (!$flag) echo self::exception_text($e), "\n";
-			return TRUE;
 		} catch (\Exception $ee) {
-			ob_get_level() && ob_clean();// Clean the output buffer if one exists
-			echo $ee->__toString();
-			exit(1);//Exit with an error status
+			return $e->__toString()."\n".$ee->__toString();
 		}
 	}
 
@@ -97,27 +111,17 @@ class ErrorHandler
 	 * @param   object  Exception
 	 * @return  string
 	 */
-	static function exception_text($e)
+	static function exceptionText($e)
 	{
-		return sprintf('%s [ %s ]: %s ~ %s [ %d ]', get_class($e), $e->getCode(), strip_tags($e->getMessage()), self::debug_path($e->getFile()), $e->getLine());
+		return sprintf('%s [ %s ]: %s ~ %s [ %d ]', get_class($e), $e->getCode(), strip_tags($e->getMessage()), self::debugPath($e->getFile()), $e->getLine());
 	}
 
-	/**
-	 * Removes application, system, modpath, or docroot from a filename,
-	 * replacing them with the plain text equivalents. Useful for debugging
-	 * when you want to display a shorter path.
-	 * // Displays SYSPATH/classes/kohana.php
-	 * echo self::debug_path(__FILE__);
-	 *
-	 * @param   string  path to debug
-	 * @return  string
-	 */
-	static function debug_path($file)
+	static function debugPath($file)
 	{
 		if (strpos($file, VENDOR_PATH) === 0) {
 			$file = 'vendor' . substr($file, strlen(VENDOR_PATH));
-		} elseif (strpos($file, APP_PATH) === 0) {
-			$file = substr($file, strlen(APP_PATH) + 1);
+		} elseif (strpos($file, SPF_APP_PATH) === 0) {
+			$file = substr($file, strlen(SPF_APP_PATH) + 1);
 		}
 		return $file;
 	}
@@ -134,7 +138,7 @@ class ErrorHandler
 	 * @return  string   source of file
 	 * @return  FALSE    file is unreadable
 	 */
-	public static function debug_source($file, $line_number, $padding = 5)
+	public static function debugSource($file, $line_number, $padding = 5)
 	{
 		if (!$file or !is_readable($file)) {
 			// Continuing will cause errors
@@ -199,7 +203,7 @@ class ErrorHandler
 			}
 			if (isset($step['file']) and isset($step['line'])) {
 				// Include the source of this step
-				$source = self::debug_source($step['file'], $step['line']);
+				$source = self::debugSource($step['file'], $step['line']);
 			}
 			if (isset($step['file'])) {
 				$file = $step['file'];
@@ -276,7 +280,7 @@ class ErrorHandler
 	/**
 	 * 判断是否为ajax调用
 	 */
-	static function is_ajax()
+	static function isAjax()
 	{
 		return (isset($_SERVER['HTTP_X_REQUESTED_WITH']) and strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
 	}

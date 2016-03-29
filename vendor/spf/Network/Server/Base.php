@@ -4,28 +4,32 @@ use spf\Process\Control;
 use spf\Log;
 class Base
 {
-	protected $swoole;
 	public $name;
-	protected $setting = [];
-	protected $server = [];
+	public $config;
+	protected $swoole;
 	protected $protocol;
-	protected $cmdPrefix = '-cmd-';
+
+
 
 	function __construct($config)
 	{
-		foreach ($config as $k => $v)$this->$k = $v;
+		$this->config = $config;
 	}
+	function __destruct()
+	{
+		unset($this->config,$this->swoole,$this->protocol);
+	}
+
 	function start()
 	{
-		$config=$this->server;
-		$listen = $this->translateListen($config['listen']);
+		$listen = $this->translateListen($this->config['listen']);
 		list($host, $port, $type) = array_shift($listen);
 		$this->swoole = $swoole = $this->listen($host, $port, $type);
 		foreach ($listen as $v) {
 			list($host, $port, $type) = $v;
 			$swoole->addlistener($host, $port, $type);
 		}
-		$swoole->set($this->setting);
+		$swoole->set($this->config['setting']);
 		$this->bindEvent();
 		$swoole->start();
 	}
@@ -40,7 +44,7 @@ class Base
 		$swoole->on('close', array($this, 'onClose'));
 		$swoole->on('receive', array($this, 'onReceive'));
 		$swoole->on('timer', array($this, 'onTimer'));
-		if (isset($this->setting['task_worker_num'])) {
+		if (isset($this->config['setting']['task_worker_num'])) {
 			$swoole->on('Task', array($this, 'onTask'));
 			$swoole->on('Finish', array($this, 'onFinish'));
 		}
@@ -49,29 +53,31 @@ class Base
 	public function onStart($server)
 	{
 		echo "onMasterStart:\n";
-		Control::setName($this->server['master_process_name']);
-		file_put_contents($this->server['master_pid_file'], $server->master_pid);
-		file_put_contents($this->server['manager_pid_file'], $server->manager_pid);
-		if ($this->server['user'])Control::changeUser($this->server['user']);
+		$config = $this->config;
+		Control::setName($config['master_process_name']);
+		file_put_contents($config['master_pid_file'], $server->master_pid);
+		file_put_contents($config['manager_pid_file'], $server->manager_pid);
+		if ($this->config['user'])Control::changeUser($this->config['user']);
 	}
 
 	public function onManagerStart($server)
 	{
 		echo "onManagerStart:\n";
-		Control::setName($this->server['manager_process_name']);
-		if ($this->server['user'])Control::changeUser($this->server['user']);
+		Control::setName($this->config['manager_process_name']);
+		if ($this->config['user'])Control::changeUser($this->config['user']);
 	}
 
 	public function onWorkerStart($server, $workerId)
 	{
 		//$this->setProtocol($protocol);//please set at children class
-		$name = ($workerId >= $this->setting['worker_num'])?'task':'event';
-		$workProcessName = sprintf($this->server['worker_process_name'],$name,$workerId);
+		$this->protocol->name = $this->name;
+		$config = $this->config;
+		$name = ($workerId >= $config['setting']['worker_num'])?'task':'event';
+		$workProcessName = sprintf($config['worker_process_name'],$name,$workerId);
 		echo "onWorkerStart:{$workProcessName}\n";
 		Control::setName($workProcessName);
-		if ($this->server['user']) Control::changeUser($this->server['user']);
+		if ($this->config['user'])Control::changeUser($this->config['user']);
 		$this->protocol->onStart($server, $workerId);
-		$this->protocol->name = $this->name;
 	}
 
 	public function onWorkerStop($server, $workerId)
@@ -87,20 +93,25 @@ class Base
 	function onReceive($server, $fd, $fromId, $data)
 	{
 		echo "Server Received:".$data."\n";
-		//$server->send($fd, "Server Received:".$data."\n");
-		if ($data == $this->cmdPrefix . "reload") {
-			$ret = intval($server->reload());
-			$server->send($fd, $ret);
-		} elseif ($data == $this->cmdPrefix . "info") {
-			$info = $server->connection_info($fd);
-			$server->send($fd, 'Info: ' . var_export($info, true) . PHP_EOL);
-		} elseif ($data == $this->cmdPrefix . "stats") {
-			$serv_stats = $server->stats();
-			$server->send($fd, 'Stats: ' . var_export($serv_stats, true) . PHP_EOL);
-		} elseif ($data == $this->cmdPrefix . "shutdown") {
-			$server->shutdown();
-		} else {
-			$this->protocol->onReceive($server, $fd, $fromId, $data);
+//		$server->send($fd, "Server Received:".$data."\n");
+		switch($data){
+			case 'reload':
+				$ret = intval($server->reload());
+				$server->send($fd, $ret);
+				break;
+			case 'info':
+				$info = $server->connection_info($fd);
+				$server->send($fd, 'Info: ' . var_export($info, true) . PHP_EOL);
+				break;
+			case 'stats':
+				$serv_stats = $server->stats();
+				$server->send($fd, 'Stats: ' . var_export($serv_stats, true) . PHP_EOL);
+				break;
+			case 'shutdown':
+				$server->shutdown();
+				break;
+			default:
+				$this->protocol->onReceive($server, $fd, $fromId, $data);
 		}
 	}
 	function onClose($server, $fd, $fromId)

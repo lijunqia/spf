@@ -1,23 +1,24 @@
 <?php
 namespace spf\Server;
-use spf\Server;
+use spf\Server\Server;
 use spf\Log;
 class Manager extends \spf\Base
 {
-	protected $config=[];
+	public $config=[];
 	function __construct($config)
 	{
 		parent::__construct();
 		$this->config = $config;
+		$loader = \Loader::getInstance();
 	}
 	function run($cmd,$name)
 	{
-		return $this->$cmd($cmd,$name);
+		return $this->$cmd($name);
 	}
-	protected function start($cmd,$name)
+	protected function start($name)
 	{
 		$config = $this->config;
-		$class = '\spf\Network\Server\\'.$config['server']['type'];
+		$class = '\spf\Network\Server\\'.$config['type'];
 		$server = new $class($config);
 		$server->name = $name;
 		return $server->start();
@@ -93,11 +94,11 @@ HEREDOC;
 	}
 	protected function getMasterPidFile()
 	{
-		return $this->config['server']['master_pid_file'];
+		return $this->config['master_pid_file'];
 	}
 	protected function getManagerPidFile()
 	{
-		return $this->config['server']['manager_pid_file'];
+		return $this->config['manager_pid_file'];
 	}
 	protected function checkServerIsRunning()
 	{

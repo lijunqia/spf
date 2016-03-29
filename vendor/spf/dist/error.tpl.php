@@ -1,7 +1,7 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<meta charset="UTF-8">
 	<title><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></title>
 	<?php
 	// Unique error identifier
@@ -113,22 +113,14 @@
 			return false;
 		}
 	</script>
-
-	<?php
-	if (!defined('IN_DEV') && IN_DEV===FALSE):
-		?>
-		<h3><?php echo htmlspecialchars($code, ENT_QUOTES, 'UTF-8'); ?></h3>
-		<p><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?></p>
-		<?php exit('</body></html>');endif;?>
-
 	<div id="error_div">
 		<h1><span class="type"><?=get_class($e)?> [ <?=$code?> ]:</span>
 			<span class="message"><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8')?></span></h1>
 		<div id="<?=$error_id?>" class="content">
 			<p><span class="file">
-<?=self::debug_path($e->getFile())?>[<?=$e->getLine()?>]
+<?=self::debugPath($e->getFile())?>[<?=$e->getLine()?>]
 </span></p>
-			<?=self::debug_source($e->getFile(), $e->getLine())?>
+			<?=self::debugSource($e->getFile(), $e->getLine())?>
 			<ol class="trace">
 				<?php foreach (self::trace($trace) as $i => $step):?>
 					<li>
@@ -141,7 +133,7 @@ if ($step['file']):
 	?>
 	<a href="#<?=$source_id?>"
 	   onclick="return koggle('<?=$source_id?>')">
-		<?=self::debug_path($step['file'])?> [ <?=$step['line']?> ]</a>
+		<?=self::debugPath($step['file'])?> [ <?=$step['line']?> ]</a>
 <?php else:?>
 	{PHP internal call}
 <?php endif;?>
@@ -191,7 +183,7 @@ if ($step['file']):
 				<table cellspacing="0">
 					<?php foreach ($included as $file):?>
 						<tr>
-							<td><code><?php	echo self::debug_path($file)?></code></td>
+							<td><code><?php	echo self::debugPath($file)?></code></td>
 						</tr>
 					<?php endforeach?>
 				</table>
@@ -206,7 +198,7 @@ if ($step['file']):
 				<table cellspacing="0">
 					<?php foreach ($included as $file):?>
 						<tr>
-							<td><code><?=self::debug_path($file)?></code></td>
+							<td><code><?=self::debugPath($file)?></code></td>
 						</tr>
 					<?php endforeach ?>
 				</table>

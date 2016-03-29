@@ -4,9 +4,10 @@ $config = [
 	'timezone'=>'Asia/Shanghai',
 	'ini_set' => [
 		'error_reporting' => E_ALL,
-		'display_errors' => 0,
+		'display_errors' => 1,
 		'log_errors' => 1,
-		'error_log' => SPF_APP_PATH.'/var/log/phperror.log'
+		'error_log' => SPF_APP_PATH.'/var/log/phperror.log',
+//		'error_log' => '';
 	],
 	'super_process_name'=>'SPFDaemon',
 	'unisock_path'=>'/var/run/SPFDaemon.sock',

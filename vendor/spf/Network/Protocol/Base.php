@@ -5,11 +5,19 @@ use spf\Network\Protocol;
 
 class Base implements Protocol
 {
-	public $server;
-
-	function __construct()
+	protected $server;
+	protected $workId;
+	public $config;
+	function __construct($server, $workerId, $config)
 	{
+		$this->server = $server;
+		$this->workId = $workerId;
+		$this->config = $config;
 		$this->init();
+	}
+	function __destruct()
+	{
+		unset($this->config,$this->server,$this->workId);
 	}
 
 	function init()
@@ -18,6 +26,7 @@ class Base implements Protocol
 	}
 	function onStart($server, $workerId)
 	{
+
 	}
 
 	function onConnect($server, $clientId, $fromId)
