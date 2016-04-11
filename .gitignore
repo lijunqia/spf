@@ -3,7 +3,7 @@
 /var/run/*
 /.idea
 /bin/examples
-/public/syb
+/public/sybx
 /vendor/syb
 /vendor/tmp
 /vendor/test/*
