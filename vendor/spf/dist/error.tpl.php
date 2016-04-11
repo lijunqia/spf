@@ -118,9 +118,9 @@
 			<span class="message"><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8')?></span></h1>
 		<div id="<?=$error_id?>" class="content">
 			<p><span class="file">
-<?=self::debugPath($e->getFile())?>[<?=$e->getLine()?>]
+<?=self::debug_path($e->getFile())?>[<?=$e->getLine()?>]
 </span></p>
-			<?=self::debugSource($e->getFile(), $e->getLine())?>
+			<?=self::debug_source($e->getFile(), $e->getLine())?>
 			<ol class="trace">
 				<?php foreach (self::trace($trace) as $i => $step):?>
 					<li>
@@ -133,7 +133,7 @@ if ($step['file']):
 	?>
 	<a href="#<?=$source_id?>"
 	   onclick="return koggle('<?=$source_id?>')">
-		<?=self::debugPath($step['file'])?> [ <?=$step['line']?> ]</a>
+		<?=self::debug_path($step['file'])?> [ <?=$step['line']?> ]</a>
 <?php else:?>
 	{PHP internal call}
 <?php endif;?>
@@ -183,7 +183,7 @@ if ($step['file']):
 				<table cellspacing="0">
 					<?php foreach ($included as $file):?>
 						<tr>
-							<td><code><?php	echo self::debugPath($file)?></code></td>
+							<td><code><?php	echo self::debug_path($file)?></code></td>
 						</tr>
 					<?php endforeach?>
 				</table>
@@ -198,7 +198,7 @@ if ($step['file']):
 				<table cellspacing="0">
 					<?php foreach ($included as $file):?>
 						<tr>
-							<td><code><?=self::debugPath($file)?></code></td>
+							<td><code><?=self::debug_path($file)?></code></td>
 						</tr>
 					<?php endforeach ?>
 				</table>

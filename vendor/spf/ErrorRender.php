@@ -2,7 +2,7 @@
 namespace spf;
 class ErrorRender
 {
-	static function getErrorType(\ErrorException $e)
+	static function get_error_type(\ErrorException $e)
 	{
 		$exit = FALSE;
 		$severity = $e->getSeverity();
@@ -65,7 +65,7 @@ class ErrorRender
 		$severity_name = 'Exception';
 		if($e instanceof \ErrorException)
 		{
-			list($severity_name,$exit) = self::getErrorType($e);
+			list($severity_name,$exit) = self::get_error_type($e);
 		}elseif($e instanceof \Error) {
 			$severity_name = 'Error';
 		}
@@ -108,10 +108,10 @@ class ErrorRender
 	 */
 	static function exception_text($e)
 	{
-		return sprintf('%s [ %s ]: %s ~ %s [ %d ]', get_class($e), $e->getCode(), strip_tags($e->getMessage()), self::debugPath($e->getFile()), $e->getLine());
+		return sprintf('%s [ %s ]: %s ~ %s [ %d ]', get_class($e), $e->getCode(), strip_tags($e->getMessage()), self::debug_path($e->getFile()), $e->getLine());
 	}
 
-	static function debugPath($file)
+	static function debug_path($file)
 	{
 		if (strpos($file, VENDOR_PATH) === 0) {
 			$file = 'vendor' . substr($file, strlen(VENDOR_PATH));

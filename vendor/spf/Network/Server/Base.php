@@ -1,7 +1,7 @@
 <?php
 namespace spf\Network\Server;
 
-use spf\Process\ProcessControl as ProcessProcessControl;
+use spf\Process\Control as ProcessControl;
 use spf\Log;
 
 class Base

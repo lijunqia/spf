@@ -2,9 +2,6 @@
 namespace spf;
 class WebApp
 {
-	const outputTypeJson = 1;
-	const outputTypeHtml = 2;
-	protected $outputType = 2;
 	/**
 	 * @var \swoole_http_request
 	 */
@@ -28,7 +25,7 @@ class WebApp
 		$this->config = $config;
 		//\set_error_handler([$this, 'errorHandler']);
 		//\set_exception_handler([$this, 'exceptionHandler']);
-		\register_shutdown_function([$this, 'fatalHandler']);
+		\register_shutdown_function([$this, 'fatal_handler']);
 		$this->loader = \Loader::get_instance();
 		//请求目录下的类库自动加载
 		$this->autoload_paths = $this->loader->autoload_paths;
@@ -50,7 +47,7 @@ class WebApp
 		}
 		$file = $this->loader->find_file($request_uri, [$this->config['root']]);
 		if ($file===FALSE) {
-			return $this->error404();
+			return $this->error_404();
 		}
 		$this->autoload_paths [] = dirname(dirname($file)) . DIRECTORY_SEPARATOR . 'vendor';
 		\spl_autoload_register([$this, 'autoload'], true, true);//添加到队列之首
@@ -58,13 +55,13 @@ class WebApp
 			try {
 				$this->run_file($file);
 			} catch (\Throwable $e) {
-				$this->exceptionHandler($e);
+				$this->exception_handler($e);
 			}
 		} else {
 			try {
 				$this->run_file($file);
 			} catch (\Exception $e) {
-				$this->exceptionHandler($e);
+				$this->exception_handler($e);
 			}
 		}
 	}
@@ -77,11 +74,6 @@ class WebApp
 		$this->output($out);
 	}
 
-	function setOutputType($type = self::outputTypeHtml)
-	{
-		$this->setOutputType($type);
-	}
-
 	function autoload($class)
 	{
 		$file = $this->loader->find_class($class, $this->autoload_paths);
@@ -91,26 +83,26 @@ class WebApp
 			return false;
 		}
 	}
-
-	function outputJson($msg, $code = 0)
+	function output_json_error($code,$msg){
+		$ret = ['code' => 0, 'msg' => $msg];
+		$this->output_json($ret);
+	}
+	function output_json(array $arr)
 	{
+		if(!isset($arr['code']))$arr['code']=0;
 		$this->response->header('Content-type', 'application/json');
-		$this->output(json_encode(['code' => 0, 'msg' => $msg], JSON_UNESCAPED_UNICODE));
-		$this->response->end(json_encode(['code' => 0, 'msg' => $msg], JSON_UNESCAPED_UNICODE));
+		if(\InDev)$arr += $this->get_timer('json');
+		$this->output(json_encode($arr, JSON_UNESCAPED_UNICODE));
+		//$this->response->end(json_encode(['code' => 0, 'msg' => $msg], JSON_UNESCAPED_UNICODE));
 	}
 
-	function outputHtml($content)
+	function output_html($content)
 	{
-		$response = $this->response;
-		if (isset($response->finished)) {
-			echo "repeat out\n";
-			return;
-		}
-		$response->finished = true;
-		$response->end($content . $this->getTimer());
+		if(\InDev)$content .= $this->get_timer('html');
+		$this->output($content);
 	}
 
-	function output($content = '', $type = self::outputTypeJson)
+	function output($content = '')
 	{
 		$response = $this->response;
 		if (isset($response->finished)) {
@@ -118,19 +110,24 @@ class WebApp
 			return;
 		}
 		//$response->finished = true;
-		if($type!==self::outputTypeHtml)$content .= $this->getTimer();
 		$response->end($content);
 	}
 
-	function getTimer()
+	function get_timer($type = 'json')
 	{
 		$pased_time = microtime(true) - $this->request->server['request_microtime'];
-		$mem = memory_get_peak_usage(true) / 1024 / 1024;
-		$str = sprintf("Execute Time: %.6fs, Memory Used: {$mem}MB\n", $pased_time);
-		return "<div style=\"text-align:center;color:red;\">{$str}</div>\n";
+		$pased_time = sprintf('%.6fs',$pased_time);
+		$mem = (memory_get_peak_usage(true) / 1024 / 1024).'MB';
+		if($type==='json')
+		{
+			return ['memory_used'=>$mem,'execute_time'=>$pased_time];
+		}else{
+			$str = "Execute Time:{$pased_time}, Memory Used: {$mem}";
+			return "<div style=\"text-align:center;color:red;\">{$str}</div>\n";
+		}
 	}
 
-	function error404()
+	function error_404()
 	{
 		$response = $this->response;
 		$response->header("Content-Type", "text/html; charset=utf-8");
@@ -138,14 +135,14 @@ class WebApp
 		return $this->output('<h1>Page Not Found!</h1>');
 	}
 
-	function exceptionHandler($e)
+	function exception_handler($e)
 	{
 		Log::error($e->__toString());
 		while (ob_get_level()) {
 			ob_end_clean();
 		}
 //      $this->response->status(500);
-		if (\inDev === true) {
+		if (\InDev === true) {
 			$msg = \spf\ErrorRender::render($e);
 		} else {
 			$msg = $e->getMessage();
@@ -153,20 +150,20 @@ class WebApp
 		$this->output($msg);
 	}
 
-	function errorHandler($errno, $errmsg, $file, $line)
+	function error_handler($errno, $errmsg, $file, $line)
 	{
 		//不符合的,返回false,由PHP标准错误进行处理
 		//if (!(error_reporting() & $errno))return false;
 		$err = new \ErrorException($errmsg, 0, $errno, $file, $line);
-		$this->exceptionHandler($err);
-		throw $err;
+		$this->exception_handler($err);
+		//throw $err;
 	}
 
-	function fatalHandler()
+	function fatal_handler()
 	{
 		$error = \error_get_last();
 		if ($error) {
-			$this->errorHandler($error['type'], $error['message'], $error['file'], $error['line']);
+			$this->error_handler($error['type'], $error['message'], $error['file'], $error['line']);
 		}
 	}
 }
