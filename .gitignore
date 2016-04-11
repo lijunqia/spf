@@ -2,8 +2,8 @@
 /var/log/*
 /var/run/*
 /.idea
-/bin/examples
-/public/syb
-/vendor/syb
-/vendor/tmp
-/vendor/test/*
+!/bin/examples
+!/public/syb
+!/vendor/syb
+!/vendor/tmp
+!/vendor/test/*
