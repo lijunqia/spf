@@ -2,7 +2,7 @@
 namespace spf\Process;
 class Control
 {
-	static function setName($name)
+	static function set_name($name)
 	{
 		return (PHP_OS!=='Darwin')?cli_set_process_title($name):FALSE;
 	}
@@ -18,7 +18,7 @@ class Control
 	 *
 	 * @param $user
 	 */
-	static function changeUser($user)
+	static function change_user($user)
 	{
 		$user = posix_getpwnam($user);
 		if ($user) {
@@ -29,7 +29,7 @@ class Control
 			return false;
 		}
 	}
-	static function getOpt($cmd)
+	static function get_opt($cmd)
 	{
 		$cmd = trim($cmd);
 		$arr = explode(' ', $cmd);
@@ -45,7 +45,7 @@ class Control
 		}
 		return $ret;
 	}
-	static function checkPidIsRunning($pid)
+	static function check_pid_is_running($pid)
 	{
 		return posix_kill($pid, 0);
 	}

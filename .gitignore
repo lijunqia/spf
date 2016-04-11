@@ -1,5 +1,8 @@
 # Created by .ignore support plugin (hsz.mobi)
 /var/log/*
-/bin/test/*
+/var/run/*
 /.idea
-/public/jce/*
+/bin/examples
+/public/syb
+/vendor/syb
+/vendor/tmp

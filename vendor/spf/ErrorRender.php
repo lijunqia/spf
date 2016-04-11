@@ -43,27 +43,22 @@ class ErrorRender
 		}
 		return array($type,$exit);
 	}
-	static function handleSwoole($e)
-	{
-
-	}
-
 	/**
 	 * PHP_SAPI === 'cli' || self::isAjax()
 	 * @param $e
 	 */
-	static function parsePlain($e)
+	static function parse_plain($e)
 	{
-		return self::exceptionText($e);
+		return self::exception_text($e);
 	}
 
 	/**
 	 * html
 	 * @param $e
 	 */
-	static function parseRich($e)
+	static function parse_rich($e)
 	{
-		ob_start();
+		\ob_start();
 		if (!headers_sent()) {
 			header('Content-Type: text/html; charset=utf-8', TRUE, 500);//header('HTTP/1.1 500 Internal Server Error');
 		}
@@ -80,11 +75,11 @@ class ErrorRender
 		$message = $e->getMessage();
 		$trace = $e->getTrace();
 		$flag = include "dist/error.tpl.php";//Include the exception HTML
-		$out = ob_get_clean();
+		$out = \ob_get_clean();
 		if($flag){
 			return $out;
 		}else{
-			return self::parsePlain($e);
+			return self::parse_plain($e);
 		}
 	}
 
@@ -95,9 +90,9 @@ class ErrorRender
 	{
 		try {
 			if($forcePlain){
-				return self::parsePlain($e);
+				return self::parse_plain($e);
 			}else{
-				return self::parseRich($e);
+				return self::parse_rich($e);
 			}
 		} catch (\Exception $ee) {
 			return $e->__toString()."\n".$ee->__toString();
@@ -111,7 +106,7 @@ class ErrorRender
 	 * @param   object  Exception
 	 * @return  string
 	 */
-	static function exceptionText($e)
+	static function exception_text($e)
 	{
 		return sprintf('%s [ %s ]: %s ~ %s [ %d ]', get_class($e), $e->getCode(), strip_tags($e->getMessage()), self::debugPath($e->getFile()), $e->getLine());
 	}
@@ -138,7 +133,7 @@ class ErrorRender
 	 * @return  string   source of file
 	 * @return  FALSE    file is unreadable
 	 */
-	public static function debugSource($file, $line_number, $padding = 5)
+	public static function debug_source($file, $line_number, $padding = 5)
 	{
 		if (!$file or !is_readable($file)) {
 			// Continuing will cause errors
@@ -203,7 +198,7 @@ class ErrorRender
 			}
 			if (isset($step['file']) and isset($step['line'])) {
 				// Include the source of this step
-				$source = self::debugSource($step['file'], $step['line']);
+				$source = self::debug_source($step['file'], $step['line']);
 			}
 			if (isset($step['file'])) {
 				$file = $step['file'];
@@ -280,7 +275,7 @@ class ErrorRender
 	/**
 	 * 判断是否为ajax调用
 	 */
-	static function isAjax()
+	static function is_ajax()
 	{
 		return (isset($_SERVER['HTTP_X_REQUESTED_WITH']) and strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
 	}

@@ -1,9 +1,9 @@
 <?php
 return [
     'type' => 'Http',//server type: Socket/Http/WebSocket
-    'listen' => [8081, ['0.0.0.0', 8082]],//port
+    'listen' => [8080, ['0.0.0.0', 8081]],//port
     'root' => SPF_APP_PATH . '/public',
-    'protocol_class' => '\phplib\SwooleHttpProtocol',
+    'protocol_class' => '\syb\oss\SwooleHttpProtocol',
     'monitor_unisock_path' => SPF_APP_PATH . '/var/run/swoole-s1-monitor.sock',
     'monitor_process_name' => 'swoole-s1-monitor',
     'master_process_name' => 'swoole-s1-master',

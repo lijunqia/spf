@@ -1,76 +1,85 @@
 <?php
 namespace spf\Server;
-use spf\Server\Server;
+
 use spf\Log;
+use spf\Process\Control;
+
 class Manager extends \spf\Base
 {
-	public $config=[];
+	public $config = [];
+
 	function __construct($config)
 	{
 		parent::__construct();
 		$this->config = $config;
-		$loader = \Loader::getInstance();
+		$loader = \Loader::get_instance();
 	}
-	function run($cmd,$name)
+
+	function run($cmd, $name)
 	{
 		return $this->$cmd($name);
 	}
+
 	protected function start($name)
 	{
 		$config = $this->config;
-		$class = '\spf\Network\Server\\'.$config['type'];
+		$class = '\spf\Network\Server\\' . $config['type'];
 		$server = new $class($config);
 		$server->name = $name;
 		return $server->start();
 	}
+
 	protected function stop()
 	{
 		$this->shutdown();
 	}
+
 	protected function shutdown()
 	{
-		$masterId = $this->getMasterPid();
-		if (!$masterId) {
-			echo $msg = "Stop Master: can not find master pid file.\e[31;40m[Failed]\e[0m",PHP_EOL;
-			Log::warn("Stop Master Failed: can not find master pid file.",'spf');
+		$master_id = $this->get_master_pid();
+		if (!$master_id) {
+			echo $msg = "[Failed] Stop Master: can not find master pid file.", Spf::print_red('[Failed]'), PHP_EOL;
+			Log::warn($msg, 'spf');
 			return false;
-		} elseif (!posix_kill($masterId, 15)) {// && !posix_kill($masterId, 15)
-			echo $msg = "Stop Master: send signal to master failed.\e[31;40m[Failed]\e[0m",PHP_EOL;
-			Log::error("Stop Master Failed: send signal to master failed",'spf');
+		} elseif (!posix_kill($master_id, 15)) {// && !posix_kill($masterId, 15)
+			echo $msg = "[Failed] Stop Master: send signal to master failed.", Spf::print_red('[Failed]'), PHP_EOL;
+			Log::error($msg, 'spf');
 			return false;
 		}
-		($file = $this->getMasterPidFile()) && unlink($file);
-		($file = $this->getManagerPidFile()) && unlink($file);
+		($file = $this->get_master_pid_file()) && unlink($file);
+		($file = $this->get_manager_pid_file()) && unlink($file);
 		usleep(50000);
-		echo $msg = "Stop Master:{$masterId} sucess.\e[32;40m[OK]\e[0m",PHP_EOL;
-		Log::info("Stop Master:{$masterId} sucess.",'spf');
-		return true;
-	}
-	protected function reload()
-	{
-		$managerId = $this->getManagerPid();
-		if (!$managerId) {
-			echo '[warning] can not find manager pid file.',PHP_EOL,"Manager reload\e[31;40m [FAIL] \e[0m",PHP_EOL;
-			Log::warn("[warning] can not find manager pid file.\nManager reload [FAIL]",'spf');
-			return false;
-		}
-		if (!posix_kill($managerId, 10)){//USR1
-			echo $msg = "Manager {$managerId} stop \e[31;40m [FAIL] \e[0m[warning] send signal to manager failed.",PHP_EOL;
-			Log::warn("Manager {$managerId} stop failed, send signal to manager failed.",'spf');
-			return false;
-		}
-		echo $msg ="Manager {$managerId} reload \033[32;40m [OK] \033[0m",PHP_EOL;
-		Log::info("Manager {$managerId} reload [OK]",'spf');
+		echo $msg = "Stop Master:{$master_id} sucess.", Spf::print_green('[OK]'), PHP_EOL;
+		Log::info($msg, 'spf');
 		return true;
 	}
 
-	protected function  status()
+	protected function reload()
+	{
+		$manager_id = $this->get_manager_pid();
+		if (!$manager_id) {
+			$msg = "[warning] can not find manager pid file.Manager reload failed!";
+			echo  $msg,Spf::print_red('[Failed]'), PHP_EOL;
+			Log::warn($msg, 'spf');
+			return false;
+		}
+		if (!posix_kill($manager_id, 10)) {//USR1
+			echo $msg = "Manager {$manager_id} stop \e[31;40m [FAIL] \e[0m[warning] send signal to manager failed.", Spf::print_green('[OK]'), PHP_EOL;
+			Log::warn($msg, 'spf');
+			return false;
+		}
+		echo $msg = "Manager {$manager_id} reload OK!", Spf::print_green('[OK]'), PHP_EOL;;
+		Log::info($msg, 'spf');
+		return true;
+	}
+
+	protected function status()
 	{
 		$version = SWOOLE_VERSION;
-		$running = $this->checkServerIsRunning()?"\e[32;40m [OK] \e[0m":"\e[31;40m [FAIL] \e[0m";
-		$master=$this->getMasterPid();
-		$manager=$this->getManagerPid();
-		$msg = <<<HEREDOC
+		$running = $this->is_running() ? Spf::print_green('[OK]'):Spf::print_red('[Failed]');
+		$master = $this->get_master_pid();
+		$manager = $this->get_manager_pid();
+		echo <<<HEREDOC
 *****************************************************************
 Summary:
 Swoole Version: {$version}
@@ -80,32 +89,37 @@ manager pid is : {$manager}
 *****************************************************************
 
 HEREDOC;
-		echo $msg;
 	}
-	protected function getMasterPid()
+
+	protected function get_master_pid()
 	{
-		$masterPidFile=$this->getMasterPidFile();
-		return is_file($masterPidFile)?file_get_contents($masterPidFile):FALSE;
+		$master_pid_file = $this->get_master_pid_file();
+		return is_file($master_pid_file) ? file_get_contents($master_pid_file) : false;
 	}
-	protected function getManagerPid()
+
+	protected function get_manager_pid()
 	{
-		$managerPidFile=$this->getManagerPidFile();
-		return is_file($managerPidFile)?file_get_contents($managerPidFile):FALSE;
+		$manager_pid_file = $this->get_manager_pid_file();
+		return is_file($manager_pid_file) ? file_get_contents($manager_pid_file) : false;
 	}
-	protected function getMasterPidFile()
+
+	protected function get_master_pid_file()
 	{
 		return $this->config['master_pid_file'];
 	}
-	protected function getManagerPidFile()
+
+	protected function get_manager_pid_file()
 	{
 		return $this->config['manager_pid_file'];
 	}
-	protected function checkServerIsRunning()
+
+	protected function is_running()
 	{
-		$pid = $this->getMasterPid();
-		return $pid && Control::checkPidIsRunning($pid);
+		$pid = $this->get_master_pid();
+		return $pid && Control::check_pid_is_running($pid);
 	}
-	function getLocalIP()
+
+	function get_local_ip()
 	{
 		return swoole_get_local_ip();
 	}

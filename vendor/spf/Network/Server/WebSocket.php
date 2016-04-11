@@ -1,6 +1,6 @@
 <?php
 namespace spf\Network\Server;
-class WebSocket extends Base
+class WebSocket extends Http
 {
 	protected function listen($host,$port)
 	{

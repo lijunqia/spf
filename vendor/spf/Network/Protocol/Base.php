@@ -1,13 +1,13 @@
 <?php
 namespace spf\Network\Protocol;
 
-use spf\Network\Protocol;
 
-class Base implements Protocol
+class Base implements IProtocol
 {
 	protected $server;
 	protected $workId;
 	public $config;
+
 	function __construct($server, $workerId, $config)
 	{
 		$this->server = $server;
@@ -15,45 +15,45 @@ class Base implements Protocol
 		$this->config = $config;
 		$this->init();
 	}
+
 	function __destruct()
 	{
-		unset($this->config,$this->server,$this->workId);
+		unset($this->config, $this->server, $this->workId);
 	}
 
 	function init()
 	{
-
-	}
-	function onStart($server, $workerId)
-	{
-
 	}
 
-	function onConnect($server, $clientId, $fromId)
+	function on_start($server, $workerId)
 	{
 	}
 
-	function onReceive($server, $clientId, $fromId, $data)
+	function on_connect($server, $clientId, $fromId)
 	{
 	}
 
-	function onClose($server, $clientId, $fromId)
+	function on_receive($server, $clientId, $fromId, $data)
 	{
 	}
 
-	function onShutdown($server, $workerId)
+	function on_close($server, $clientId, $fromId)
 	{
 	}
 
-	function onTask($server, $taskId, $fromId, $data)
+	function on_shutdown($server, $workerId)
 	{
 	}
 
-	function onFinish($server, $taskId, $data)
+	function on_task($server, $taskId, $fromId, $data)
 	{
 	}
 
-	function onTimer($server, $interval)
+	function on_finish($server, $taskId, $data)
+	{
+	}
+
+	function on_timer($server, $interval)
 	{
 	}
 }

@@ -5,9 +5,4 @@ class Socket extends Base{
 	{
 		return new \swoole_server($host, $port, SWOOLE_PROCESS, $type);
 	}
-	protected function bindEvent()
-	{
-		//$swoole->on('receive', array($this, 'onReceive'));
-		parent::bindEvent();
-	}
 }

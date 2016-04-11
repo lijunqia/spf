@@ -1,6 +1,7 @@
 <?php
 namespace phplib;
-class Route{
+class Route
+{
     static function parseUri($uri)
     {
         $uri = trim($uri,'/ ');

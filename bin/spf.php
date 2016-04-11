@@ -1,22 +1,30 @@
 #!/usr/bin/env php
 <?php
-define('SPF_APP_PATH', dirname(dirname(__FILE__)));
-const phpBin = PHP_BINDIR . '/php';
-const execBin = __FILE__;
+/**
+ * SPF 是否处于开发调试模式
+ */
 const inDev = true;
-const inSwoole = true;
-const cmds = ['start', 'stop', 'reload', 'restart', 'shutdown', 'status', 'list'];
-include SPF_APP_PATH . '/vendor/Loader.php';
-Loader::getInstance()->setIncludePath(SPF_APP_PATH);
-use spf\Server\Server;
-$args = getOptions($argv);
-(new Server($args))->run();
+
+define('SPF_APP_PATH', dirname(dirname(__FILE__)));
+define('VENDOR_PATH',SPF_APP_PATH.DIRECTORY_SEPARATOR.'vendor');
+require VENDOR_PATH .DIRECTORY_SEPARATOR. 'Loader.php';
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //                                     不修改部分
 //
 ////////////////////////////////////////////////////////////////////////////////
+const inSpf = true;
+const execBin = __FILE__;
+const cmds = ['start', 'stop', 'reload', 'restart', 'shutdown', 'status', 'list'];
+
+
+//设定加载目录
+Loader::get_instance()->set_include_path(SPF_APP_PATH);
+//运行spf
+use spf\Server\Spf;
+(new Spf(get_options($argv)))->run();
+
 /**
  * 取命令行参数
  * @param $args
@@ -24,14 +32,14 @@ $args = getOptions($argv);
  * @return array
  */
 
-function getOptions($args)
+function get_options($args)
 {
     $args = array_slice($args, 1);
-    if ((isset($args[0]) && $args[0] === Server::ServerReq)) {
-        $type = Server::ServerReq;
+    if ((isset($args[0]) && $args[0] === Spf::ServerReq)) {
+        $type = Spf::ServerReq;
         array_shift($args);
     } else {
-        $type = Server::SupervisionReq;
+        $type = Spf::SupervisionReq;
     }
     $cmd = $name = null;
     $numArgs = count($args);
