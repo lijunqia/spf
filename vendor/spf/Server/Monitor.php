@@ -1,10 +1,9 @@
 <?php
 namespace spf\Server;
 use spf\Server\Spf;
-use \swoole_process;
 class Monitor
 {
-	const phpBin = PHP_BINDIR . '/php';
+	const PhpBin = PHP_BINDIR . '/php';
 	protected $name;
 	protected $cmd;
 	protected $process;
@@ -27,16 +26,16 @@ class Monitor
 	{
 		$this->cmd = $cmd;
 		$name = $this->name;
-		$redirect_stdin_stdout =($cmd==='start' || \inDev===TRUE)?FALSE:TRUE;
-		$process = new swoole_process(function(swoole_process $worker)use($cmd,$name){
-			$worker->exec(self::phpBin, array(execBin, Spf::ServerReq ,$cmd, $name));
+		$redirect_stdin_stdout =($cmd==='start' || \InDev===TRUE)?FALSE:TRUE;
+		$process = new \swoole_process(function(\swoole_process $worker)use($cmd,$name){
+			$worker->exec(self::PhpBin, array(ExecBin, Spf::ServerReq ,$cmd, $name));
 		},$redirect_stdin_stdout);
 		$pid = $process->start();
 	}
 	/**
 	 * 检查进程是否已经启动
 	 */
-	protected function checkProcessExist()
+	protected function check_process_exist()
 	{
 		if (!$this->processExist) {
 			throw new \LogicException("The process {$this->monitorProcessName} is not running,please check it.");
@@ -47,9 +46,9 @@ class Monitor
 	 * @param $data
 	 * @return mixed
 	 */
-	protected function sendCmd($data)
+	protected function send_cmd($data)
 	{
-		$client = new swoole_client(SWOOLE_UNIX_STREAM, SWOOLE_SOCK_SYNC);
+		$client = new \swoole_client(SWOOLE_UNIX_STREAM, SWOOLE_SOCK_SYNC);
 		$client->connect($this->unisockPath, 0);
 		$client->send(json_encode($data));
 		$ret = $client->recv();
@@ -58,7 +57,7 @@ class Monitor
 		$client->close();
 		return $ret;
 	}
-	protected function showCmdReturn($cmd, $name, $ret)
+	protected function show_cmd_return($cmd, $name, $ret)
 	{
 		$msg = "call: `php {$cmd} {$name}``,The return is ".print_r($ret, true);
 		echo $msg;

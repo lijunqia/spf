@@ -3,7 +3,7 @@
 /**
  * SPF 是否处于开发调试模式
  */
-const inDev = true;
+const InDev = true;
 
 define('SPF_APP_PATH', dirname(dirname(__FILE__)));
 define('VENDOR_PATH',SPF_APP_PATH.DIRECTORY_SEPARATOR.'vendor');
@@ -14,9 +14,9 @@ require VENDOR_PATH .DIRECTORY_SEPARATOR. 'Loader.php';
 //                                     不修改部分
 //
 ////////////////////////////////////////////////////////////////////////////////
-const inSpf = true;
-const execBin = __FILE__;
-const cmds = ['start', 'stop', 'reload', 'restart', 'shutdown', 'status', 'list'];
+//const InSpf = true;
+const ExecBin = __FILE__;
+const CMDS = ['start', 'stop', 'reload', 'restart', 'shutdown', 'status', 'list'];
 
 
 //设定加载目录
@@ -50,7 +50,7 @@ function get_options($args)
     } else {
         help();
     }
-    if (!in_array($cmd, cmds)) help();
+    if (!in_array($cmd, CMDS)) help();
     return ['type' => $type, 'cmd' => $cmd, 'name' => $name];
 }
 
